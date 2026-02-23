@@ -1,30 +1,35 @@
-const { supabase } = require('../config/db');
+const { pool } = require('../config/db');
 
 exports.getAllLeads = async (req, res) => {
   try {
     const { status, category, search } = req.query;
     
-    let query = supabase.from('leads').select('*');
+    let query = 'SELECT * FROM leads WHERE 1=1';
+    const params = [];
+    let paramIndex = 1;
 
     if (status) {
-      query = query.eq('status', status);
+      query += ` AND status = $${paramIndex}`;
+      params.push(status);
+      paramIndex++;
     }
 
     if (category) {
-      query = query.eq('category', category);
+      query += ` AND category = $${paramIndex}`;
+      params.push(category);
+      paramIndex++;
     }
 
     if (search) {
-      query = query.or(`business_name.ilike.%${search}%,phone.ilike.%${search}%`);
+      query += ` AND (business_name ILIKE $${paramIndex} OR phone ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
+      paramIndex++;
     }
 
-    query = query.order('created_at', { ascending: false });
+    query += ' ORDER BY created_at DESC';
 
-    const { data: leads, error } = await query;
-
-    if (error) throw error;
-
-    res.json(leads || []);
+    const result = await pool.query(query, params);
+    res.json(result.rows);
   } catch (error) {
     console.error('Get leads error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -33,18 +38,13 @@ exports.getAllLeads = async (req, res) => {
 
 exports.getLeadById = async (req, res) => {
   try {
-    const { data: leads, error } = await supabase
-      .from('leads')
-      .select('*')
-      .eq('id', req.params.id);
+    const result = await pool.query('SELECT * FROM leads WHERE id = $1', [req.params.id]);
     
-    if (error) throw error;
-
-    if (!leads || leads.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Lead not found' });
     }
 
-    res.json(leads[0]);
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Get lead error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -59,23 +59,12 @@ exports.createLead = async (req, res) => {
       return res.status(400).json({ message: 'Business name and phone are required' });
     }
 
-    const { data, error } = await supabase
-      .from('leads')
-      .insert([
-        {
-          business_name,
-          phone,
-          category: category || 'Other',
-          city: city || '',
-          notes: notes || '',
-          status: status || 'pending'
-        }
-      ])
-      .select();
+    const result = await pool.query(
+      'INSERT INTO leads (business_name, phone, category, city, notes, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [business_name, phone, category || 'Other', city || '', notes || '', status || 'pending']
+    );
 
-    if (error) throw error;
-
-    res.status(201).json(data[0]);
+    res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Create lead error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -86,25 +75,16 @@ exports.updateLead = async (req, res) => {
   try {
     const { business_name, phone, category, city, notes } = req.body;
 
-    const { data, error } = await supabase
-      .from('leads')
-      .update({
-        business_name,
-        phone,
-        category,
-        city,
-        notes
-      })
-      .eq('id', req.params.id)
-      .select();
+    const result = await pool.query(
+      'UPDATE leads SET business_name = $1, phone = $2, category = $3, city = $4, notes = $5 WHERE id = $6 RETURNING *',
+      [business_name, phone, category, city, notes, req.params.id]
+    );
 
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Lead not found' });
     }
 
-    res.json(data[0]);
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Update lead error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -113,12 +93,11 @@ exports.updateLead = async (req, res) => {
 
 exports.deleteLead = async (req, res) => {
   try {
-    const { error } = await supabase
-      .from('leads')
-      .delete()
-      .eq('id', req.params.id);
+    const result = await pool.query('DELETE FROM leads WHERE id = $1 RETURNING id', [req.params.id]);
     
-    if (error) throw error;
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Lead not found' });
+    }
 
     res.json({ message: 'Lead deleted successfully' });
   } catch (error) {
@@ -139,24 +118,16 @@ exports.updateStatus = async (req, res) => {
       return res.status(400).json({ message: 'Price is required for approved leads' });
     }
 
-    const updateData = {
-      status,
-      price: status === 'approved' ? price : null
-    };
+    const result = await pool.query(
+      'UPDATE leads SET status = $1, price = $2 WHERE id = $3 RETURNING *',
+      [status, status === 'approved' ? price : null, req.params.id]
+    );
 
-    const { data, error } = await supabase
-      .from('leads')
-      .update(updateData)
-      .eq('id', req.params.id)
-      .select();
-
-    if (error) throw error;
-
-    if (!data || data.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Lead not found' });
     }
 
-    res.json(data[0]);
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Update status error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -165,22 +136,20 @@ exports.updateStatus = async (req, res) => {
 
 exports.getStats = async (req, res) => {
   try {
-    const { data: totalData } = await supabase.from('leads').select('id', { count: 'exact' });
-    const { data: pendingData } = await supabase.from('leads').select('id', { count: 'exact' }).eq('status', 'pending');
-    const { data: waitingData } = await supabase.from('leads').select('id', { count: 'exact' }).eq('status', 'waiting');
-    const { data: approvedData } = await supabase.from('leads').select('id', { count: 'exact' }).eq('status', 'approved');
-    const { data: rejectedData } = await supabase.from('leads').select('id', { count: 'exact' }).eq('status', 'rejected');
-    const { data: revenueData } = await supabase.from('leads').select('price').eq('status', 'approved').not('price', 'is', null);
-
-    const totalRevenue = revenueData?.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0) || 0;
+    const total = await pool.query('SELECT COUNT(*) as count FROM leads');
+    const pending = await pool.query("SELECT COUNT(*) as count FROM leads WHERE status = 'pending'");
+    const waiting = await pool.query("SELECT COUNT(*) as count FROM leads WHERE status = 'waiting'");
+    const approved = await pool.query("SELECT COUNT(*) as count FROM leads WHERE status = 'approved'");
+    const rejected = await pool.query("SELECT COUNT(*) as count FROM leads WHERE status = 'rejected'");
+    const revenue = await pool.query("SELECT COALESCE(SUM(price), 0) as total FROM leads WHERE status = 'approved' AND price IS NOT NULL");
 
     res.json({
-      total: totalData?.length || 0,
-      pending: pendingData?.length || 0,
-      waiting: waitingData?.length || 0,
-      approved: approvedData?.length || 0,
-      rejected: rejectedData?.length || 0,
-      revenue: totalRevenue
+      total: parseInt(total.rows[0].count),
+      pending: parseInt(pending.rows[0].count),
+      waiting: parseInt(waiting.rows[0].count),
+      approved: parseInt(approved.rows[0].count),
+      rejected: parseInt(rejected.rows[0].count),
+      revenue: parseFloat(revenue.rows[0].total)
     });
   } catch (error) {
     console.error('Get stats error:', error);
@@ -190,13 +159,13 @@ exports.getStats = async (req, res) => {
 
 exports.getChartData = async (req, res) => {
   try {
-    const { data: leads } = await supabase.from('leads').select('category, status, price, created_at');
+    const leads = await pool.query('SELECT category, status, price, created_at FROM leads');
 
     const categoryMap = {};
     const statusMap = {};
     const revenueMap = {};
 
-    leads?.forEach(lead => {
+    leads.rows.forEach(lead => {
       categoryMap[lead.category] = (categoryMap[lead.category] || 0) + 1;
       statusMap[lead.status] = (statusMap[lead.status] || 0) + 1;
 
