@@ -31,11 +31,11 @@ export const Button = ({ children, onClick, variant = 'primary', size = 'md', cl
 
 export const PremiumSelect = ({ value, onChange, options, placeholder, className = '', icon: Icon, name }) => {
   return (
-    <div className="relative group">
+    <div className="relative group z-10">
       <div className="absolute inset-0 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-lg opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
       <div className="relative">
         {Icon && (
-          <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
+          <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none z-10" />
         )}
         <select
           name={name}
