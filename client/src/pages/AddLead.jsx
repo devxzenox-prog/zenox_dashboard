@@ -140,7 +140,7 @@ const AddLead = () => {
                     <PremiumSelect
                       name="category"
                       value={formData.category}
-                      onChange={handleChange}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       options={categories.map(cat => ({ value: cat, label: cat }))}
                       className="py-3.5"
                     />
