@@ -140,11 +140,15 @@ const AddLead = () => {
                     <select
                       name="category"
                       value={formData.category}
-                      onChange={handleChange}
-                      className="w-full bg-background-primary/50 border border-accent-primary/20 rounded-xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-accent-primary/50 focus:ring-2 focus:ring-accent-primary/20 transition-all duration-300"
+                      onChange={(e) => {
+                        console.log('Category changed to:', e.target.value);
+                        setFormData({ ...formData, category: e.target.value });
+                      }}
+                      className="w-full bg-gray-800 border border-accent-primary/20 rounded-xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-accent-primary/50 focus:ring-2 focus:ring-accent-primary/20 transition-all duration-300"
+                      style={{ colorScheme: 'dark', zIndex: 9999, position: 'relative' }}
                     >
                       {categories.map(cat => (
-                        <option key={cat} value={cat} className="bg-background-secondary">{cat}</option>
+                        <option key={cat} value={cat} style={{ backgroundColor: '#1e1e2e', color: 'white' }}>{cat}</option>
                       ))}
                     </select>
                   </InputField>
