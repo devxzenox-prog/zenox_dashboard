@@ -19,8 +19,8 @@ const InputField = ({ icon: Icon, label, required, children, error }) => (
       {label}
       {required && <span className="text-red-400 ml-1">*</span>}
     </label>
-    <div className="relative group">
-      <div className="absolute inset-0 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl opacity-0 group-hover:opacity-10 group-focus-within:opacity-20 transition-opacity duration-300" />
+    <div className="relative group z-10">
+      <div className="absolute inset-0 bg-gradient-to-r from-accent-primary to-accent-secondary rounded-xl opacity-0 group-hover:opacity-10 group-focus-within:opacity-20 transition-opacity duration-300 pointer-events-none" />
       <div className="relative">
         {Icon && (
           <Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary group-focus-within:text-accent-primary transition-colors" />
