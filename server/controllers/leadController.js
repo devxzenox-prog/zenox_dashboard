@@ -21,7 +21,7 @@ exports.getAllLeads = async (req, res) => {
     }
 
     if (search) {
-      query += ` AND (business_name ILIKE $${paramIndex} OR phone ILIKE $${paramIndex})`;
+      query += ` AND (business_name ILIKE $${paramIndex} OR phone ILIKE $${paramIndex} OR city ILIKE $${paramIndex})`;
       params.push(`%${search}%`);
       paramIndex++;
     }
