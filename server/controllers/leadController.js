@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 exports.getAllLeads = async (req, res) => {
   try {
-    const { status, category, search } = req.query;
+    const { status, category, search, location } = req.query;
     
     let query = 'SELECT * FROM leads WHERE 1=1';
     const params = [];
@@ -23,6 +23,12 @@ exports.getAllLeads = async (req, res) => {
     if (search) {
       query += ` AND (business_name ILIKE $${paramIndex} OR phone ILIKE $${paramIndex})`;
       params.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    if (location) {
+      query += ` AND city ILIKE $${paramIndex}`;
+      params.push(`%${location}%`);
       paramIndex++;
     }
 

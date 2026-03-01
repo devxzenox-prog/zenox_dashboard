@@ -193,6 +193,7 @@ const LeadsTable = ({ status, title }) => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
   const [editLead, setEditLead] = useState(null);
   const [deleteLead, setDeleteLead] = useState(null);
   const [priceModal, setPriceModal] = useState({ isOpen: false, lead: null });
@@ -200,7 +201,7 @@ const LeadsTable = ({ status, title }) => {
 
   useEffect(() => {
     fetchLeads();
-  }, [status, search, categoryFilter]);
+  }, [status, search, categoryFilter, locationFilter]);
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -208,6 +209,7 @@ const LeadsTable = ({ status, title }) => {
       const params = { status };
       if (search) params.search = search;
       if (categoryFilter) params.category = categoryFilter;
+      if (locationFilter) params.location = locationFilter;
       
       const res = await leadService.getAll(params);
       setLeads(res.data);
@@ -278,6 +280,15 @@ const LeadsTable = ({ status, title }) => {
               icon={FiFilter}
               className="w-auto min-w-[140px]"
             />
+            <div className="relative">
+              <input
+                type="text"
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
+                className="glass-input w-auto min-w-[140px]"
+                placeholder="Filter by city..."
+              />
+            </div>
             {status === 'approved' && (
               <div className="text-sm text-text-secondary">
                 Total Revenue: <span className="text-emerald-400 font-semibold">₹{totalRevenue.toLocaleString('en-IN')}</span>
