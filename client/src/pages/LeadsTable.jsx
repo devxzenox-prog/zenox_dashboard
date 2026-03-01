@@ -263,12 +263,12 @@ const LeadsTable = ({ status, title }) => {
         >
           <div className="p-4 border-b border-accent-primary/20 flex flex-wrap gap-4 items-center">
             <div className="relative flex-1 min-w-[200px]">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary pointer-events-none" />
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="glass-input pl-12"
+                className="glass-input pl-11"
                 placeholder="Search leads..."
               />
             </div>
@@ -280,15 +280,13 @@ const LeadsTable = ({ status, title }) => {
               icon={FiFilter}
               className="w-auto min-w-[140px]"
             />
-            <div className="relative">
-              <input
-                type="text"
-                value={locationFilter}
-                onChange={(e) => setLocationFilter(e.target.value)}
-                className="glass-input w-auto min-w-[140px]"
-                placeholder="Filter by city..."
-              />
-            </div>
+            <input
+              type="text"
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              className="glass-input w-auto min-w-[140px]"
+              placeholder="Filter by city..."
+            />
             {status === 'approved' && (
               <div className="text-sm text-text-secondary">
                 Total Revenue: <span className="text-emerald-400 font-semibold">₹{totalRevenue.toLocaleString('en-IN')}</span>
