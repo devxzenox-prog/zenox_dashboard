@@ -137,13 +137,16 @@ const AddLead = () => {
                 <h3 className="text-sm font-medium text-accent-primary uppercase tracking-wider mb-4">Location Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <InputField icon={FiMapPin} label="Category">
-                    <PremiumSelect
+                    <select
                       name="category"
                       value={formData.category}
                       onChange={handleChange}
-                      options={categories.map(cat => ({ value: cat, label: cat }))}
-                      className="py-3.5"
-                    />
+                      className="w-full bg-background-primary/50 border border-accent-primary/20 rounded-xl py-3.5 pl-12 pr-4 text-white focus:outline-none focus:border-accent-primary/50 focus:ring-2 focus:ring-accent-primary/20 transition-all duration-300"
+                    >
+                      {categories.map(cat => (
+                        <option key={cat} value={cat} className="bg-background-secondary">{cat}</option>
+                      ))}
+                    </select>
                   </InputField>
 
                   <InputField icon={FiMapPin} label="City">
